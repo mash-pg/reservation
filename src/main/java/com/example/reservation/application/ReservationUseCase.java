@@ -1,10 +1,13 @@
 package com.example.reservation.application;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.reservation.application.dto.ReservationOutput;
 import com.example.reservation.domain.entity.Reservation;
 import com.example.reservation.domain.exception.ReservationNotFoundException;
 import com.example.reservation.domain.repository.ReservationRepository;
@@ -24,47 +27,65 @@ public class ReservationUseCase {
 		this.repository = repository;
 	}
 	
-	public Reservation create(
-			ResourceId id,
-			UserId userId,
-			TimeSlot timeSlot
+	public ReservationOutput create(
+			Long resourceId,
+			Long userId,
+			LocalDateTime startTime,
+			LocalDateTime endTime
 			) {
+		ResourceId rId = new ResourceId(resourceId);
+		UserId uId = new UserId(userId);
+		TimeSlot timeSlot = new TimeSlot(startTime, endTime);
 		Reservation reservation = new Reservation(
-				null, 
-				id, 
-				userId, 
-				timeSlot, 
+				null,
+				rId,
+				uId,
+				timeSlot,
 				ReservationStatus.PENDING
 				);
-		return repository.save(reservation);
+		Reservation saved = repository.save(reservation);
+		return ReservationOutput.fromEntity(saved);
+	}
+	public List<ReservationOutput> findAll() {
+		return repository.findAll().stream().map(ReservationOutput::fromEntity)
+				.collect(Collectors.toList());
 	}
 	
-	public Reservation confirm(ReservationId id) {
-		Reservation reservation =repository.findById(id)
+	public ReservationOutput confirm(Long id) {
+		ReservationId rId = new ReservationId(id);
+		Reservation reservation =repository.findById(rId)
 		.orElseThrow(
-				()->new ReservationNotFoundException("任意のIDではないです"));
+				()->new ReservationNotFoundException("予約が見つかりません: " + id));
 		reservation.confirm();
-		return repository.save(reservation);
-	}
-	public Reservation cancel(ReservationId id) {
-		Reservation reservation =repository.findById(id)
-		.orElseThrow(
-				()->new ReservationNotFoundException("任意のIDではないです"));
-		reservation.cancel();
-		return repository.save(reservation);
-	}
-	public Reservation complete(ReservationId id) {
-		Reservation reservation =repository.findById(id)
-		.orElseThrow(
-				()->new ReservationNotFoundException("任意のIDではないです"));
-		reservation.complete();
-		return repository.save(reservation);
-	}
-	public List<Reservation> findByResourceId(ResourceId id){
-		return repository.findByResourceId(id);
+		Reservation saved = repository.save(reservation);
+		return ReservationOutput.fromEntity(saved);
 	}
 	
-	public List<Reservation> findAll() {
-		return repository.findAll();
+	public ReservationOutput cancel( Long id) {
+		ReservationId rId = new ReservationId(id);
+		Reservation reservation =repository.findById(rId)
+		.orElseThrow(
+				()->new ReservationNotFoundException("予約が見つかりません: " + id));
+		reservation.cancel();
+		Reservation saved = repository.save(reservation);
+		return ReservationOutput.fromEntity(saved);
 	}
+	
+	public ReservationOutput complete(Long id) {
+		ReservationId rId = new ReservationId(id);
+		Reservation reservation =repository.findById(rId)
+		.orElseThrow(
+				()->new ReservationNotFoundException("予約が見つかりません: " + id));
+		reservation.complete();
+		Reservation saved = repository.save(reservation);
+		return ReservationOutput.fromEntity(saved);
+	}
+	
+	public List<ReservationOutput> findByResourceId(Long id){
+		ResourceId resourceId = new ResourceId(id);
+		return repository.findByResourceId(resourceId).stream().map(ReservationOutput::fromEntity)
+				.collect(Collectors.toList());
+	}
+	
+
 }
