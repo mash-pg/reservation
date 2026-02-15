@@ -18,6 +18,8 @@ import com.example.reservation.application.dto.ReservationOutput;
 import com.example.reservation.presentation.dto.ReservationRequest;
 import com.example.reservation.presentation.dto.ReservationResponse;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/api/reservations")
 public class ReservationController {
@@ -37,7 +39,7 @@ public class ReservationController {
 
 	@PostMapping
 	public ResponseEntity<ReservationResponse> create(
-			@RequestBody ReservationRequest request
+			@Valid	@RequestBody ReservationRequest request
 			){
 		
 		ReservationOutput output = useCase.create(

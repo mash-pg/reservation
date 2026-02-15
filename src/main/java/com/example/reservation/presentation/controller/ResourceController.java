@@ -16,6 +16,8 @@ import com.example.reservation.application.dto.ResourceOutput;
 import com.example.reservation.presentation.dto.ResourceRequest;
 import com.example.reservation.presentation.dto.ResourceResponse;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/api/resources")
 public class ResourceController {
@@ -36,7 +38,7 @@ public class ResourceController {
 	
 	@PostMapping
 	public ResponseEntity<ResourceResponse> create(
-			@RequestBody ResourceRequest request
+		@Valid	@RequestBody ResourceRequest request
 			){
 		ResourceOutput output = useCase.create(request.getName());
 		ResourceResponse response = ResourceResponse.fromOutput(output);
